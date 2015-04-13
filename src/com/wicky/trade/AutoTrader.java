@@ -13,35 +13,79 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import com.sun.jna.Native;
+import com.sun.jna.Pointer;
+import com.sun.jna.platform.win32.User32;
+import com.sun.jna.platform.win32.WinDef.HWND;
+import com.sun.jna.platform.win32.WinUser.WNDENUMPROC;
+
 public class AutoTrader {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws AppNotFoundException {
         new AutoTrader().start();  
     }
 
     private Robot r;
+    private boolean appFound = false;
     
-    private void start() {
+    public class AppNotFoundException extends Exception{
+        private static final long serialVersionUID = -7911430367135828942L;
+        public AppNotFoundException() {
+            super("Trading Application Cannot be Found.");
+        }
+    } 
+    
+    private void start() throws AppNotFoundException {
         try {
             r = new Robot();
         } catch (AWTException e) {
             e.printStackTrace();
         }
+        bringWindowToFront();
+        if(!appFound){
+            throw new AppNotFoundException();
+        }
+//        altTabSwitch();
         doTrade();
+//        altTabSwitch();
     }
 
+    private void bringWindowToFront(){
+        System.setProperty("jna.encoding", "gb18030");  
+        final User32 user32 = User32.INSTANCE;
+        user32.EnumWindows(new WNDENUMPROC() {
+            int count = 0;
+            @Override
+            public boolean callback(HWND hWnd, Pointer pt) {
+              int titleLength = user32.GetWindowTextLength(hWnd) + 1;
+              char[] title = new char[titleLength];
+              user32.GetWindowText(hWnd, title, titleLength);
+              String wiTxt = Native.toString(title);
+              if(wiTxt.contains("网上股票交易系统")){
+                System.out.println("Found window with text " + hWnd + ", total " + ++count + " Text: " + wiTxt);
+                user32.SetForegroundWindow(hWnd);
+                user32.ShowWindow(hWnd, User32.SW_RESTORE);
+                user32.SetFocus(hWnd);
+                appFound = true;
+              }
+              return true;
+            }
+        }, null);
+        
+//        HWND fgWindow = user32.FindWindow(null, "网上股票交易系统5.0");
+//        user32.SetForegroundWindow(fgWindow);
+//        user32.ShowWindow(fgWindow, User32.SW_RESTORE);
+//        user32.SetFocus(fgWindow);
+    }
+    
     private void doTrade(){
-        altTabSwitch();
+//        exractBasicInfo();
         
-        exractBasicInfo();
-        
-        int code = 601555;
-        double price = 23.65;
-        int amount = 500;
+        int code = 600104;
+        double price = 26.12;
+        int amount = 100;
         
         buy(code, price, amount);
-        sell(code, price, amount);
-        
-        altTabSwitch();
+//        sell(code, price, amount);
         
     }
 
@@ -107,29 +151,27 @@ public class AutoTrader {
     }
 
     private void buy(int code, double price, int amount) {
-        pressF6();
+        pressF3();
         pressF1();
         input(code);
-        pressEnter();
         pressEnter();
         input(price);
         pressEnter();
         input(amount);
-        r.delay(500);
-        pressB();
-        r.delay(500);
-        pressY();
-        r.delay(500);
-        pressSpace();
-        r.delay(1000);
+//        r.delay(500);
+//        pressB();
+//        r.delay(500);
+//        pressY();
+//        r.delay(500);
+//        pressSpace();
+//        r.delay(1000);
     }
     
 
     private void sell(int code, double price, int amount) {
-        pressF6();
+        pressF3();
         pressF2();
         input(code);
-        pressEnter();
         pressEnter();
         input(price);
         pressEnter();
